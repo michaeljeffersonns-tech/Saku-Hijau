@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saku Hijau - Aplikasi Terintegrasi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ================= CSS STYLING ================= */
+        :root {
+            --primary: #0d6b3e;
+            --primary-light: #e8f5e9;
+            --accent: #4caf50;
+            --danger: #d32f2f;
+            --warning: #f57c00;
+            --bg: #f4fdf8;
+            --text: #333;
+            --white: #fff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); line-height: 1.6; }
+        
+        /* NAVBAR & MENU */
+        nav { background: var(--white); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 24px; font-weight: 700; color: var(--primary); }
+        .logo span { color: var(--accent); }
+        .menu { display: flex; gap: 10px; overflow-x: auto; }
+        .menu button { background: none; border: none; padding: 8px 15px; font-weight: 600; color: #666; cursor: pointer; border-radius: 20px; transition: 0.3s; white-space: nowrap; }
+        .menu button.active, .menu button:hover { background: var(--primary-light); color: var(--primary); }
+
+        /* HALAMAN (Hanya tampil satu per satu) */
+        .page { display: none; max-width: 900px; margin: 30px auto; padding: 0 20px; animation: fadeIn 0.5s; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CARD STYLE */
+        .card { background: var(--white); border-radius: 15px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 5px solid var(--primary); }
+        .card h2 { font-size: 20px; margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        
+        /* FORM ELEMENTS */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; color: #555; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-family: 'Poppins', sans-serif; }
+        button.btn-utama { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; transition: 0.3s; margin-top: 10px; }
+        button.btn-utama:hover { background: var(--accent); }
+        button.btn-scan { background: #4285F4; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        /* HASIL & TABEL */
+        .result-box { background: var(--primary-light); padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 14px; }
+        .highlight { font-weight: 700; color: var(--primary); font-size: 16px; }
+        .warning-text { color: var(--danger); font-weight: bold; }
+        .safe-text { color: var(--primary); font-weight: bold; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: var(--primary-light); color: var(--primary); }
+
+        /* MAPS SIMULASI */
+        .map-container { width: 100%; height: 200px; background: #e0e0e0; border-radius: 10px; margin-top: 15px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px dashed #999; }
+        .map-route { position: absolute; width: 80%; height: 4px; background: #4285F4; top: 50%; left: 10%; transform: translateY(-50%); display: none; }
+        .map-pin { position: absolute; width: 15px; height: 15px; background: red; border-radius: 50%; border: 2px solid white; display: none; }
+        .pin-start { left: 10%; top: 45%; }
+        .pin-end { left: 85%; top: 45%; }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav>
+        <div class="logo">🌿 Saku<span>Hijau</span></div>
+        <div class="menu">
+            <button onclick="bukaHalaman('beranda')" class="active" id="btn-beranda">Beranda</button>
+            <button onclick="bukaHalaman('keuangan')" id="btn-keuangan">💰 Keuangan</button>
+            <button onclick="bukaHalaman('makanan')" id="btn-makanan">🍔 Kalori</button>
+            <button onclick="bukaHalaman('aktivitas')" id="btn-aktivitas">🏃 Aktivitas</button>
+            <button onclick="bukaHalaman('karbon')" id="btn-karbon">🌍 Karbon</button>
+        </div>
+    </nav>
+
+    <!-- ================= HALAMAN 1: BERANDA ================= -->
+    <div id="page-beranda" class="page active">
+        <div class="card" style="text-align: center; padding: 50px 20px;">
+            <h1 style="color: var(--primary); margin-bottom: 20px;">Selamat Datang di Saku Hijau 🌿</h1>
+            <p style="font-size: 18px; color: #555; margin-bottom: 30px;">Satu platform untuk mewujudkan hidup hemat, berkelanjutan, dan ramah lingkungan.</p>
+            <img src="https://img.freepik.com/free-vector/green-energy-concept-illustration_114360-1322.jpg" alt="Eco" style="max-width: 300px; border-radius: 20px; margin-bottom: 20px;">
+            <p>Silakan gunakan menu di atas untuk mulai mengelola keuangan, menghitung kalori, dan memantau jejak karbonmu!</p>
+        </div>
+    </div>
+
+    <!-- ================= HALAMAN 2: KEUANGAN ================= -->
+    <div id="page-keuangan" class="page">
+        <div class="card">
+            <h2>💰 Jurnal Keuangan</h2>
+            <div class="form-group">
+                <label>Jenis Transaksi</label>
+                <select id="jenisTransaksi" onchange="toggleFormHutang()">
+                    <option value="pengeluaran">Pengeluaran (Beli Makanan/dll)</option>
+                    <option value="pemasukan">Pemasukan (Uang Saku/Gaji)</option>
+                    <option value="hutang">Pinjaman / Hutang</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Keterangan</label>
+                <input type="text" id="ketTransaksi" placeholder="Contoh: Beli Bakso, Uang Saku">
+            </div>
+            <div class="form-group">
+                <label>Nominal (Masukkan Angka Saja)</label>
+                <input type="text" id="nominalTransaksi" onkeyup="formatRupiahInput(this)" placeholder="Contoh: 13000">
+            </div>
+            
+            <div id="formHutang" style="display:none; background: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <div class="form-group">
+                    <label>Bunga Hutang (%) per bulan</label>
+                    <input type="number" id="bungaHutang" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Jatuh Tempo</label>
+                    <input type="date" id="jatuhTempo">
+                </div>
+            </div>
+            
+            <button class="btn-utama" onclick="tambahTransaksi()">Catat Transaksi</button>
+
+            <div class="result-box">
+                <p>Total Pemasukan: <span class="highlight" id="totalMasuk">Rp 0</span></p>
+                <p>Total Pengeluaran: <span class="highlight" id="totalKeluar">Rp 0</span></p>
+                <p style="border-top: 1px solid #ccc; padding-top: 5px; margin-top: 5px;">Saldo Akhir: <span class="highlight" id="saldoAkhir">Rp 0</span></p>
+            </div>
+            <div id="statusHutang"></div>
+            
+            <table>
+                <thead><tr><th>Waktu</th><th>Keterangan</th><th>Nominal</th></tr></thead>
+                <tbody id="tabelJurnal"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= HALAMAN 3: MAKANAN ================= -->
+    <div id="page-makanan" class="page">
+        <div class="card">
+            <h2>🍔 Kalkulator Kalori Makanan</h2>
+            
+            <button class="btn-scan" onclick="simulasiScanMakanan()">📷 Scan Makanan (Simulasi Google Lens)</button>
+            <p id="hasilScan" style="font-size: 13px; color: var(--primary); margin-bottom: 15px; font-weight: bold; text-align: center;"></p>
+
+            <div class="form-group">
+                <label>Atau Pilih Manual (Data Lampiran PDF):</label>
+                <select id="pilihMakanan">
+                    <option value="">-- Pilih Makanan --</option>
+                    <optgroup label="Makanan Pokok">
+                        <option value="175">Nasi Putih (100g) - 175 kkal</option>
+                        <option value="349">Nasi Putih Kentucky (225g) - 349 kkal</option>
+                        <option value="90.2">Jagung Rebus (250g) - 90.2 kkal</option>
+                        <option value="166">Kentang Rebus (200g) - 166 kkal</option>
+                        <option value="321">Mie Goreng (200g) - 321 kkal</option>
+                    </optgroup>
+                    <optgroup label="Lauk Pauk">
+                        <option value="260">Bakso Daging Sapi (100g) - 260 kkal</option>
+                        <option value="466">Sate Ayam (100g) - 466 kkal</option>
+                        <option value="129.4">Ayam Bakar Bumbu Kuning (100g) - 129.4 kkal</option>
+                        <option value="116">Sambal Goreng Tempe (50g) - 116 kkal</option>
+                        <option value="97">Telur Ayam Rebus (60g) - 97 kkal</option>
+                        <option value="180.7">Ikan Bandeng Goreng (100g) - 180.7 kkal</option>
+                    </optgroup>
+                    <optgroup label="Sayuran">
+                        <option value="88">Sayur Asam (100g) - 88 kkal</option>
+                        <option value="61">Sayur Lodeh (100g) - 61 kkal</option>
+                        <option value="151">Tumis Daun Singkong (120g) - 151 kkal</option>
+                        <option value="52">Tumis Buncis (100g) - 52 kkal</option>
+                    </optgroup>
+                    <optgroup label="Buah-buahan">
+                        <option value="92">Apel (160g) - 92 kkal</option>
+                        <option value="136.5">Pisang Rebus (125g) - 136.5 kkal</option>
+                        <option value="46">Papaya (100g) - 46 kkal</option>
+                        <option value="104">Nanas (200g) - 104 kkal</option>
+                    </optgroup>
+                    <optgroup label="Makanan Ringan / Jajanan">
+                        <option value="295">Gado-gado (150g) - 295 kkal</option>
+                        <option value="384">Pempek (200g) - 384 kkal</option>
+                        <option value="302">Mie Bakso (200g) - 302 kkal</option>
+                        <option value="247">Lemper (70g) - 247 kkal</option>
+                        <option value="168">Es Cendol (100g) - 168 kkal</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Jumlah Porsi (Gram)</label>
+                <input type="number" id="porsiMakanan" value="100">
+            </div>
+            <button class="btn-utama" onclick="hitungKaloriMakanan()">Hitung & Catat Kalori</button>
+            
+            <div class="result-box">
+                <p>Kalori Makanan Ini: <span class="highlight" id="hasilKaloriMakanan">0 kkal</span></p>
+                <p>Total Kalori Hari Ini: <span class="highlight" id="totalKaloriHarian">0 kkal</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= HALAMAN 4: AKTIVITAS ================= -->
+    <div id="page-aktivitas" class="page">
+        <div class="card">
+            <h2>🏃 Aktivitas Fisik (Simulasi Strava)</h2>
+            <div class="form-group">
+                <label>Pilih Olahraga</label>
+                <select id="jenisOlahraga">
+                    <option value="0.05">Joging (0.05 kkal/meter)</option>
+                    <option value="0.07">Lari Cepat (0.07 kkal/meter)</option>
+                    <option value="0.04">Sepeda Santai (0.04 kkal/meter)</option>
+                    <option value="0.12">Berenang (0.12 kkal/meter)</option>
+                    <option value="0.08">Basket (0.08 kkal/meter)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Jarak Tempuh (Meter)</label>
+                <input type="number" id="jarakJalan" placeholder="Contoh: 1000">
+            </div>
+            <div class="form-group">
+                <label>Kondisi Cuaca</label>
+                <select id="kondisiCuaca">
+                    <option value="1.0">Normal / Sejuk (20°C)</option>
+                    <option value="1.2">Panas Terik / Strafa (35°C)</option>
+                    <option value="1.1">Hujan / Lembab</option>
+                </select>
+            </div>
+            <button class="btn-utama" onclick="mulaiRute()">Mulai Rute & Hitung Kalori</button>
+            
+            <div class="map-container">
+                <span id="map-text" style="color: #666; z-index: 10;">Peta Rute (Simulasi Google Maps)</span>
+                <div class="map-route" id="garisRute"></div>
+                <div class="map-pin pin-start" id="pinMulai"></div>
+                <div class="map-pin pin-end" id="pinSelesai"></div>
+            </div>
+
+            <div class="result-box">
+                <p>Kalori Terbakar: <span class="highlight" id="hasilKaloriBakar">0 kkal</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= HALAMAN 5: JEJAK KARBON ================= -->
+    <div id="page-karbon" class="page">
+        <div class="card">
+            <h2>🌍 Jejak Karbon & Kualitas Udara</h2>
+            <p style="font-size: 13px; margin-bottom: 10px;">Integrasi API IQAir (Simulasi Data):</p>
+            <div class="form-group">
+                <label>Pilih Kota</label>
+                <select id="pilihKota">
+                    <option value="Jakarta">Jakarta</option>
+                    <option value="Medan">Medan</option>
+                    <option value="Surabaya">Surabaya</option>
+                </select>
+            </div>
+            <button class="btn-utama" onclick="ambilDataIQAir()">Tarik Data Udara & Hitung Karbon</button>
+            
+            <div class="result-box" id="hasilApi" style="background: #e3f2fd; border-left: 4px solid #2196f3;">
+                Klik tombol untuk mengambil data simulasi.
+            </div>
+            
+            <div class="result-box" style="margin-top: 15px;">
+                <p>Estimasi Jejak Karbon Harian: <span class="highlight" id="hasilKarbon">0 kg CO2e</span></p>
+                <p id="statusSaran" style="font-weight: bold; margin-top: 10px;"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ================= JAVASCRIPT LOGIC ================= */
+
+        // 1. NAVIGASI HALAMAN
+        function bukaHalaman(namaHalaman) {
+            // Sembunyikan semua halaman
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            // Hapus status aktif di menu
+            document.querySelectorAll('.menu button').forEach(btn => btn.classList.remove('active'));
+            
+            // Tampilkan halaman yang dipilih
+            document.getElementById('page-' + namaHalaman).classList.add('active');
+            document.getElementById('btn-' + namaHalaman).classList.add('active');
+        }
+
+        // 2. FORMAT RUPIAH OTOMATIS
+        function formatRupiahInput(input) {
+            let angka = input.value.replace(/[^,\d]/g, '').toString();
+            let split = angka.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+            input.value = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+        }
+
+        // 3. LOGIKA KEUANGAN
+        let totalMasuk = 0, totalKeluar = 0;
+        let daftarHutang = [];
+
+        function toggleFormHutang() {
+            const jenis = document.getElementById('jenisTransaksi').value;
+            document.getElementById('formHutang').style.display = (jenis === 'hutang') ? 'block' : 'none';
+        }
+
+        function tambahTransaksi() {
+            const jenis = document.getElementById('jenisTransaksi').value;
+            const ket = document.getElementById('ketTransaksi').value || 'Tanpa Keterangan';
+            let nominalStr = document.getElementById('nominalTransaksi').value.replace(/\./g, '');
+            const nominal = parseFloat(nominalStr) || 0;
+            
+            if(nominal <= 0) { alert('Masukkan nominal yang valid!'); return; }
+
+            const waktu = new Date().toLocaleString('id-ID');
+            const tbody = document.getElementById('tabelJurnal');
+            const row = document.createElement('tr');
+            const formatRp = (angka) => 'Rp ' + angka.toLocaleString('id-ID');
+
+            if(jenis === 'pemasukan') {
+                totalMasuk += nominal;
+                row.innerHTML = `<td>${waktu}</td><td>${ket}</td><td style="color:green;">+ ${formatRp(nominal)}</td>`;
+            } else if(jenis === 'pengeluaran') {
+                totalKeluar += nominal;
+                row.innerHTML = `<td>${waktu}</td><td>${ket}</td><td style="color:red;">- ${formatRp(nominal)}</td>`;
+            } else if(jenis === 'hutang') {
+                const bunga = parseFloat(document.getElementById('bungaHutang').value) || 0;
+                const jatuhTempo = document.getElementById('jatuhTempo').value || 'Tidak ada';
+                daftarHutang.push({ ket, nominal, bunga, jatuhTempo });
+                row.innerHTML = `<td>${waktu}</td><td>HUTANG: ${ket}</td><td style="color:orange;">${formatRp(nominal)}</td>`;
+                tampilkanStatusHutang();
+            }
+
+            tbody.appendChild(row);
+            updateSaldo();
+            document.getElementById('ketTransaksi').value = '';
+            document.getElementById('nominalTransaksi').value = '';
+        }
+
+        function updateSaldo() {
+            document.getElementById('totalMasuk').innerText = 'Rp ' + totalMasuk.toLocaleString('id-ID');
+            document.getElementById('totalKeluar').innerText = 'Rp ' + totalKeluar.toLocaleString('id-ID');
+            document.getElementById('saldoAkhir').innerText = 'Rp ' + (totalMasuk - totalKeluar).toLocaleString('id-ID');
+        }
+
+        function tampilkanStatusHutang() {
+            const div = document.getElementById('statusHutang');
+            if(daftarHutang.length === 0) { div.innerHTML = ''; return; }
+            let html = '<div class="result-box" style="background:#fff3e0; border-left:4px solid #ff9800;"><b>Status Hutang:</b><br>';
+            daftarHutang.forEach((h, i) => {
+                const totalBunga = (h.nominal * h.bunga) / 100;
+                const totalBayar = h.nominal + totalBunga;
+                html += `<p>${i+1}. ${h.ket} - Pokok: Rp ${h.nominal.toLocaleString('id-ID')} | Bunga: ${h.bunga}% (Rp ${totalBunga.toLocaleString('id-ID')}) | <b>Total Bayar: Rp ${totalBayar.toLocaleString('id-ID')}</b> | Jatuh Tempo: ${h.jatuhTempo}</p>`;
+            });
+            div.innerHTML = html + '</div>';
+        }
+
+        // 4. LOGIKA MAKANAN
+        let totalKaloriHarian = 0;
+
+        function simulasiScanMakanan() {
+            const hasilScan = document.getElementById('hasilScan');
+            hasilScan.innerText = "Sedang memindai gambar... (Simulasi AI)";
+            
+            setTimeout(() => {
+                // Simulasi AI mendeteksi Nasi Padang
+                hasilScan.innerText = "✅ AI Mendeteksi: Nasi Putih + Rendang (Estimasi 450 kkal)";
+                document.getElementById('pilihMakanan').value = "175"; // Set ke Nasi Putih
+                document.getElementById('porsiMakanan').value = "250"; // Set porsi
+                alert("Makanan berhasil di-scan! Silakan klik 'Hitung & Catat Kalori'.");
+            }, 1500);
+        }
+
+        function hitungKaloriMakanan() {
+            const kaloriPer100g = parseFloat(document.getElementById('pilihMakanan').value);
+            const porsi = parseFloat(document.getElementById('porsiMakanan').value);
+            
+            if(isNaN(kaloriPer100g)) { alert('Pilih makanan terlebih dahulu!'); return; }
+            if(isNaN(porsi) || porsi <= 0) { alert('Masukkan porsi yang valid!'); return; }
+
+            const kaloriDidapat = (kaloriPer100g / 100) * porsi;
+            totalKaloriHarian += kaloriDidapat;
+
+            document.getElementById('hasilKaloriMakanan').innerText = Math.round(kaloriDidapat) + ' kkal';
+            document.getElementById('totalKaloriHarian').innerText = Math.round(totalKaloriHarian) + ' kkal';
+        }
+
+        // 5. LOGIKA AKTIVITAS (STRAVA & MAPS SIMULASI)
+        function mulaiRute() {
+            const jarak = parseFloat(document.getElementById('jarakJalan').value);
+            const faktorOlahraga = parseFloat(document.getElementById('jenisOlahraga').value);
+            const faktorCuaca = parseFloat(document.getElementById('kondisiCuaca').value);
+
+            if(isNaN(jarak) || jarak <= 0) { alert('Masukkan jarak yang valid!'); return; }
+
+            // Tampilkan Animasi Peta
+            document.getElementById('map-text').style.display = 'none';
+            document.getElementById('garisRute').style.display = 'block';
+            document.getElementById('pinMulai').style.display = 'block';
+            document.getElementById('pinSelesai').style.display = 'block';
+
+            // Hitung Kalori
+            const kaloriDasar = jarak * faktorOlahraga;
+            const totalBakar = kaloriDasar * faktorCuaca;
+            document.getElementById('hasilKaloriBakar').innerText = Math.round(totalBakar) + ' kkal';
+        }
+
+        // 6. LOGIKA JEJAK KARBON & SARAN
+        function ambilDataIQAir() {
+            const kota = document.getElementById('pilihKota').value;
+            const hasilDiv = document.getElementById('hasilApi');
+            const statusSaran = document.getElementById('statusSaran');
+            
+            hasilDiv.innerHTML = "Sedang mengambil data dari IQAir (Simulasi)...";
+
+            setTimeout(() => {
+                const dataSimulasi = {
+                    'Jakarta': { aqi: 155, status: 'Tidak Sehat' },
+                    'Medan': { aqi: 80, status: 'Sedang' },
+                    'Surabaya': { aqi: 120, status: 'Tidak Sehat bagi Sensitif' }
+                };
+
+                const data = dataSimulasi[kota];
+                const jejakKarbon = (data.aqi / 100).toFixed(2);
+
+                hasilDiv.innerHTML = `<b>📍 ${kota}</b><br>AQI: <b>${data.aqi}</b> (${data.status})<br>Sumber: IQAir (Simulasi)`;
+                document.getElementById('hasilKarbon').innerText = jejakKarbon + ' kg CO2e';
+
+                // Logika Saran (Sesuai Permintaan)
+                if (data.aqi > 100) {
+                    statusSaran.innerHTML = `⚠️ <span class="warning-text">STATUS: TIDAK BAGUS</span><br><b>Saran:</b> Tetap di dalam rumah, tutup jendela, dan gunakan masker (N95) jika terpaksa keluar. Hindari aktivitas luar ruangan yang berat.`;
+                } else {
+                    statusSaran.innerHTML = `✅ <span class="safe-text">STATUS: BAGUS</span><br><b>Saran:</b> Udara cukup bersih. Kamu bisa beraktivitas di luar ruangan dengan aman, namun tetap jaga kebersihan lingkungan.`;
+                }
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
