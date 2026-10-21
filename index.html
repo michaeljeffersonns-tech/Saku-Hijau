@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saku Hijau - Aplikasi Terintegrasi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #0d6b3e; 
+            --primary-light: #e8f5e9; 
+            --accent: #4caf50; 
+            --danger: #d32f2f; 
+            --warning: #f57c00; 
+            --bg: #f4fdf8; 
+            --text: #333; 
+            --text-muted: #666;
+            --white: #fff; 
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+        
+        /* ================= SIDEBAR MENU ================= */
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--white); box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 1000; transition: 0.3s ease-in-out; padding-top: 20px; }
+        .sidebar.active { left: 0; }
+        .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h3 { color: var(--primary); font-size: 20px; font-weight: 700; }
+        .close-btn { cursor: pointer; font-size: 24px; color: #888; font-weight: bold; }
+        .sidebar-menu { list-style: none; padding: 10px 0; }
+        .sidebar-menu li { padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 15px; font-weight: 500; color: var(--text-muted); transition: 0.2s; font-size: 15px; }
+        .sidebar-menu li:hover, .sidebar-menu li.active { background: var(--primary-light); color: var(--primary); border-left: 5px solid var(--primary); font-weight: 600; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
+        .overlay.active { display: block; }
+
+        /* ================= NAVBAR ================= */
+        nav { background: var(--white); padding: 15px 5%; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .hamburger { font-size: 26px; cursor: pointer; color: var(--primary); }
+        .logo { font-size: 22px; font-weight: 700; color: var(--primary); }
+        .logo span { color: var(--accent); }
+
+        /* ================= HALAMAN ================= */
+        .page { display: none; max-width: 600px; margin: 20px auto; padding: 0 15px; animation: fadeIn 0.4s; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--white); border-radius: 16px; padding: 25px 20px; box-shadow: var(--shadow); margin-bottom: 20px; border-top: 5px solid var(--primary); }
+        .card h2 { font-size: 18px; margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; gap: 10px; font-weight: 700; }
+        
+        /* ================= FORM ================= */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 14px; background: #fafafa; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--primary); outline: none; background: var(--white); }
+        
+        /* ================= TOMBOL ================= */
+        button.btn-utama { background: var(--primary); color: white; border: none; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; width: 100%; transition: 0.3s; margin-top: 10px; font-size: 14px; }
+        button.btn-utama:hover { background: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); }
+        button.btn-catat { background: var(--warning); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 600; width: 100%; cursor: pointer; margin-top: 12px; font-size: 13px; }
+        button.btn-catat:hover { background: #e65100; }
+        button.btn-hapus { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        button.btn-plus { width: 50px; height: 46px; border-radius: 10px; background: var(--primary); color: white; border: none; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        button.btn-plus:hover { background: var(--accent); }
+        button.btn-scan { background: #4285F4; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 600; width: 100%; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; }
+
+        /* ================= HASIL & TABEL ================= */
+        .result-box { background: var(--primary-light); padding: 18px; border-radius: 12px; margin-top: 15px; font-size: 14px; border-left: 4px solid var(--primary); }
+        .highlight { font-weight: 700; color: var(--primary); font-size: 16px; }
+        .warning-text { color: var(--danger); font-weight: bold; }
+        .safe-text { color: var(--primary); font-weight: bold; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; border-radius: 8px; overflow: hidden; }
+        th, td { border-bottom: 1px solid #eee; padding: 12px 10px; text-align: left; }
+        th { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
+
+        /* ================= TAB ================= */
+        .tab-container { display: flex; border-bottom: 2px solid #eee; margin-bottom: 20px; overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 10px; background: none; border: none; font-weight: 600; color: var(--text-muted); cursor: pointer; font-size: 14px; border-bottom: 3px solid transparent; white-space: nowrap; transition: 0.3s; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+
+        /* ================= MAPS SIMULASI ================= */
+        .map-container { width: 100%; height: 180px; background: #e0e0e0; border-radius: 12px; margin-top: 15px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px dashed #bbb; }
+        .map-route { position: absolute; width: 80%; height: 4px; background: #4285F4; top: 50%; left: 10%; transform: translateY(-50%); display: none; border-radius: 2px; }
+        .map-pin { position: absolute; width: 16px; height: 16px; background: red; border-radius: 50%; border: 3px solid white; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .pin-start { left: 10%; top: 44%; }
+        .pin-end { left: 85%; top: 44%; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR & OVERLAY -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>🌿 Saku Hijau</h3>
+            <span class="close-btn" onclick="toggleSidebar()">×</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li onclick="bukaHalaman('beranda')" id="menu-beranda" class="active">🏠 Beranda</li>
+            <li onclick="bukaHalaman('keuangan')" id="menu-keuangan">💰 Jurnal Keuangan</li>
+            <li onclick="bukaHalaman('energi')" id="menu-energi">⚡ Energi & Air</li>
+            <li onclick="bukaHalaman('makanan')" id="menu-makanan">🍔 Kalori Makanan</li>
+            <li onclick="bukaHalaman('aktivitas')" id="menu-aktivitas">🏃 Aktivitas Fisik</li>
+            <li onclick="bukaHalaman('karbon')" id="menu-karbon">🌍 Jejak Karbon</li>
+        </ul>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav>
+        <div class="hamburger" onclick="toggleSidebar()">☰</div>
+        <div class="logo">Saku<span>Hijau</span></div>
+    </nav>
+
+    <!-- ================= BERANDA ================= -->
+    <div id="page-beranda" class="page active">
+        <div class="card" style="text-align: center; padding: 35px 20px;">
+            <h1 style="color: var(--primary); margin-bottom: 10px; font-size: 22px; font-weight: 700;">Selamat Datang! 🌿</h1>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 25px;">Satu platform untuk mewujudkan hidup hemat, berkelanjutan, dan ramah lingkungan.</p>
+            
+            <!-- GAMBAR MAHASISWA (Sesuai nama file di GitHub kamu) -->
+            <div style="margin-bottom: 25px;">
+                <img src="gambar-mahasiswa.png.jpg" alt="Mahasiswa Saku Hijau" style="width: 100%; max-width: 320px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
+            </div>
+            
+            <p style="font-size: 14px; font-weight: 600; color: var(--primary); margin-bottom: 5px;">Mulai dari Kecil, Langkah Kecil, untuk Dampak Besar.</p>
+            <p style="font-size: 13px; color: var(--text-muted);">Klik ikon ☰ di pojok kiri atas untuk membuka menu fitur.</p>
+        </div>
+    </div>
+
+    <!-- ================= KEUANGAN ================= -->
+    <div id="page-keuangan" class="page">
+        <div class="card">
+            <h2>💰 Jurnal Keuangan</h2>
+            <div class="form-group">
+                <label>Jenis Transaksi</label>
+                <select id="jenisTransaksi" onchange="toggleFormHutang()">
+                    <option value="pengeluaran">Pengeluaran</option>
+                    <option value="pemasukan">Pemasukan</option>
+                    <option value="hutang">Pinjaman / Hutang</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Keterangan</label>
+                <input type="text" id="ketTransaksi" placeholder="Contoh: Beli Bakso / Pinjam Teman">
+            </div>
+            <div class="form-group">
+                <label>Nominal (Masukkan Angka Saja)</label>
+                <input type="text" id="nominalTransaksi" onkeyup="formatRupiahInput(this)" placeholder="Contoh: 13000">
+            </div>
+            
+            <div id="formHutang" style="display:none; background: #fff3e0; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid var(--warning);">
+                <div class="form-group">
+                    <label>Bunga Hutang (%) per bulan</label>
+                    <input type="number" id="bungaHutang" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Tanggal Jatuh Tempo</label>
+                    <input type="date" id="jatuhTempo">
+                </div>
+            </div>
+            
+            <button class="btn-utama" onclick="tambahTransaksi()">Catat Transaksi</button>
+
+            <div class="result-box">
+                <p>Total Pemasukan: <span class="highlight" id="totalMasuk">Rp 0</span></p>
+                <p>Total Pengeluaran: <span class="highlight" id="totalKeluar">Rp 0</span></p>
+                <p style="border-top: 1px solid #ddd; padding-top: 8px; margin-top: 8px;">Saldo Akhir: <span class="highlight" id="saldoAkhir">Rp 0</span></p>
+            </div>
+            <div id="statusHutang"></div>
+            
+            <table>
+                <thead><tr><th>Waktu</th><th>Keterangan</th><th>Nominal</th></tr></thead>
+                <tbody id="tabelJurnal"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= ENERGI & AIR ================= -->
+    <div id="page-energi" class="page">
+        <div class="card">
+            <h2>⚡ Kalkulator Energi & Air</h2>
+            
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="bukaTabEnergi('listrik')" id="tab-btn-listrik">Listrik</button>
+                <button class="tab-btn" onclick="bukaTabEnergi('surya')" id="tab-btn-surya">Surya</button>
+                <button class="tab-btn" onclick="bukaTabEnergi('air')" id="tab-btn-air">Air PDAM</button>
+            </div>
+
+            <!-- TAB LISTRIK -->
+            <div id="konten-listrik">
+                <label style="font-weight: 700; color: var(--primary); margin-bottom: 10px; display: block;">Keranjang Perangkat Listrik</label>
+                
+                <div style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label>Pilih Perangkat</label>
+                        <select id="perangkatListrik">
+                            <option value="100">Kulkas Mini (100W)</option>
+                            <option value="150">Kulkas / Freezer (150W)</option>
+                            <option value="400">Mesin Cuci (400W)</option>
+                            <option value="1200">Setrika (1200W)</option>
+                            <option value="720">AC 1/2 PK (720W)</option>
+                            <option value="60">Kipas Angin (60W)</option>
+                            <option value="50">TV LED 32" (50W)</option>
+                            <option value="65">Laptop (65W)</option>
+                            <option value="10">Lampu LED (10W)</option>
+                        </select>
+                    </div>
+                    <div style="width: 80px;">
+                        <label>Jam/hari</label>
+                        <input type="number" id="jamPerangkat" value="12">
+                    </div>
+                    <button class="btn-plus" onclick="tambahPerangkatListrik()">+</button>
+                </div>
+
+                <table id="tabelPerangkat" style="margin-bottom: 15px;">
+                    <thead><tr><th>Perangkat</th><th>Daya (W)</th><th>Jam</th><th>Aksi</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+                <p style="font-size: 13px; font-weight: 600; margin-bottom: 10px;">Total Daya Harian: <span id="totalDayaHarian" style="color: var(--primary);">0 Watt</span></p>
+
+                <hr style="margin: 15px 0; border: 0; border-top: 1px dashed #ccc;">
+
+                <div class="form-group">
+                    <label>Golongan Tarif Listrik</label>
+                    <select id="golonganListrik">
+                        <option value="415">450 VA Bersubsidi (Rp 415/kWh)</option>
+                        <option value="1352">900 VA RTM (Rp 1.352/kWh)</option>
+                        <option value="1444.70">1300 - 2200 VA (Rp 1.444,70/kWh)</option>
+                        <option value="1699.53">3500 VA ke atas (Rp 1.699,53/kWh)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Jumlah Hari (d) dalam Sebulan</label>
+                    <input type="number" id="hariListrik" value="30">
+                </div>
+                <button class="btn-utama" onclick="hitungTagihanListrik()">Hitung Total Tagihan Listrik</button>
+
+                <div class="result-box" id="hasilListrikBox" style="display:none;">
+                    <p>Total Energi Bulanan (E): <span class="highlight" id="totalKwhBulanan">0 kWh</span></p>
+                    <p>Estimasi Tagihan Bulanan: <span class="highlight" id="biayaListrikBulanan">Rp 0</span></p>
+                    <button class="btn-catat" onclick="catatTagihanKeKeuangan('Listrik', 'biayaListrikBulanan')">+ Catat Tagihan Ini ke Jurnal Keuangan</button>
+                </div>
+            </div>
+
+            <!-- TAB SURYA -->
+            <div id="konten-surya" style="display:none;">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Simulasikan potensi penghematan jika kamu beralih ke Panel Surya. (Estimasi radiasi matahari Indonesia: 4,5 jam/hari).</p>
+                
+                <div class="form-group">
+                    <label>Kebutuhan Listrik Bulanan (kWh)</label>
+                    <input type="number" id="kebutuhanKwhSurya" placeholder="Masukkan angka kWh (misal: 150)">
+                    <p style="font-size: 11px; color: var(--primary); margin-top: 5px;">*Tips: Hitung dulu tagihan listrikmu di tab Listrik, lalu masukkan angka kWh-nya di sini.</p>
+                </div>
+                <button class="btn-utama" onclick="hitungSimulasiSurya()">Hitung Simulasi Panel Surya</button>
+
+                <div class="result-box" id="hasilSuryaBox" style="display:none;">
+                    <p>Kapasitas Sistem yang Dibutuhkan: <span class="highlight" id="kapasitasSurya">0 kWp</span></p>
+                    <p>Estimasi Jumlah Panel (450Wp): <span class="highlight" id="jumlahPanel">0 Unit</span></p>
+                    <p>Estimasi Biaya Investasi Awal: <span class="highlight" id="biayaInvestasiSurya">Rp 0</span></p>
+                    <p>Estimasi Penghematan Listrik / Bulan: <span class="highlight" id="hematSurya">Rp 0</span></p>
+                </div>
+            </div>
+
+            <!-- TAB AIR -->
+            <div id="konten-air" style="display:none;">
+                <div class="form-group">
+                    <label>Golongan Tarif PDAM (Contoh: Bandung)</label>
+                    <select id="golonganAir">
+                        <option value="1000">2A1 - Rp 1.000/m3 (1-10 m3)</option>
+                        <option value="1600">2A1 - Rp 1.600/m3 (11-20 m3)</option>
+                        <option value="2600">2A3 - Rp 2.600/m3 (1-10 m3)</option>
+                        <option value="4600">2A3 - Rp 4.600/m3 (11-20 m3)</option>
+                        <option value="7400">2A3 - Rp 7.400/m3 (21-30 m3)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Volume Pemakaian Air (m³)</label>
+                    <input type="number" id="volumeAir" placeholder="Misal: 20">
+                </div>
+                <div class="form-group">
+                    <label>Biaya Perawatan / Administrasi (Rp)</label>
+                    <input type="number" id="biayaAdminAir" value="10000">
+                </div>
+                <button class="btn-utama" onclick="hitungTagihanAir()">Hitung Tagihan Air</button>
+
+                <div class="result-box" id="hasilAirBox" style="display:none;">
+                    <p>Estimasi Tagihan PDAM Bulanan: <span class="highlight" id="biayaAirBulanan">Rp 0</span></p>
+                    <button class="btn-catat" onclick="catatTagihanKeKeuangan('Air PDAM', 'biayaAirBulanan')">+ Catat Tagihan Ini ke Jurnal Keuangan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MAKANAN ================= -->
+    <div id="page-makanan" class="page">
+        <div class="card">
+            <h2>🍔 Kalkulator Kalori Makanan</h2>
+            <button class="btn-scan" onclick="simulasiScanMakanan()">📷 Scan Makanan (Simulasi AI)</button>
+            <p id="hasilScan" style="font-size: 13px; color: var(--primary); margin-bottom: 15px; font-weight: bold; text-align: center;"></p>
+            <div style="display: flex; gap: 10px; align-items: flex-end; margin-bottom: 15px;">
+                <div style="flex: 1;">
+                    <label>Pilih Makanan:</label>
+                    <select id="pilihMakanan">
+                        <option value="">-- Pilih Makanan --</option>
+                        <optgroup label="Makanan Pokok">
+                            <option value="175">Nasi Putih (100g) - 175 kkal</option>
+                            <option value="349">Nasi Putih Kentucky (225g) - 349 kkal</option>
+                            <option value="90.2">Jagung Rebus (250g) - 90.2 kkal</option>
+                            <option value="166">Kentang Rebus (200g) - 166 kkal</option>
+                        </optgroup>
+                        <optgroup label="Lauk Pauk">
+                            <option value="260">Bakso Daging Sapi (100g) - 260 kkal</option>
+                            <option value="466">Sate Ayam (100g) - 466 kkal</option>
+                            <option value="129.4">Ayam Bakar (100g) - 129.4 kkal</option>
+                            <option value="97">Telur Ayam Rebus (60g) - 97 kkal</option>
+                            <option value="180.7">Ikan Bandeng Goreng (100g) - 180.7 kkal</option>
+                        </optgroup>
+                        <optgroup label="Sayuran">
+                            <option value="88">Sayur Asam (100g) - 88 kkal</option>
+                            <option value="61">Sayur Lodeh (100g) - 61 kkal</option>
+                            <option value="151">Tumis Daun Singkong (120g) - 151 kkal</option>
+                        </optgroup>
+                        <optgroup label="Buah-buahan">
+                            <option value="92">Apel (160g) - 92 kkal</option>
+                            <option value="136.5">Pisang Rebus (125g) - 136.5 kkal</option>
+                            <option value="46">Papaya (100g) - 46 kkal</option>
+                        </optgroup>
+                        <optgroup label="Jajanan">
+                            <option value="295">Gado-gado (150g) - 295 kkal</option>
+                            <option value="384">Pempek (200g) - 384 kkal</option>
+                            <option value="302">Mie Bakso (200g) - 302 kkal</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div style="width: 80px;">
+                    <label>Porsi (g)</label>
+                    <input type="number" id="porsiMakanan" value="100">
+                </div>
+                <button class="btn-plus" onclick="tambahMakanan()">+</button>
+            </div>
+            <table id="tabelMakanan" style="margin-bottom: 15px;">
+                <thead><tr><th>Makanan</th><th>Porsi</th><th>Kalori</th><th>Aksi</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div class="result-box">
+                <p>Total Kalori Hari Ini: <span class="highlight" id="totalKaloriHarian">0 kkal</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= AKTIVITAS FISIK ================= -->
+    <div id="page-aktivitas" class="page">
+        <div class="card">
+            <h2>🏃 Aktivitas Fisik</h2>
+            
+            <div class="form-group">
+                <label>Pilih Olahraga</label>
+                <select id="jenisOlahraga">
+                    <option value="7">Joging (7 MET)</option>
+                    <option value="10">Lari Cepat (10 MET)</option>
+                    <option value="5.5">Sepeda Santai (5.5 MET)</option>
+                    <option value="8">Berenang (8 MET)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Berat Badan (kg)</label>
+                <input type="number" id="beratBadan" value="60">
+            </div>
+            <div class="form-group">
+                <label>Durasi Latihan (Menit)</label>
+                <input type="number" id="durasiLatihan" value="30">
+            </div>
+            <div class="form-group">
+                <label>Kondisi Cuaca</label>
+                <select id="kondisiCuaca">
+                    <option value="1.0">Normal / Sejuk</option>
+                    <option value="1.2">Panas Terik</option>
+                </select>
+            </div>
+            <button class="btn-utama" onclick="mulaiRute()">Mulai Rute & Hitung Kalori</button>
+            
+            <div class="map-container">
+                <span id="map-text" style="color: #666; z-index: 10;">Peta Rute (Simulasi)</span>
+                <div class="map-route" id="garisRute"></div>
+                <div class="map-pin pin-start" id="pinMulai"></div>
+                <div class="map-pin pin-end" id="pinSelesai"></div>
+            </div>
+
+            <div class="result-box">
+                <p>Kalori Terbakar: <span class="highlight" id="hasilKaloriBakar">0 kkal</span></p>
+                <p style="font-size: 11px; color: #666; margin-top: 5px;">*Rumus: MET × Berat Badan × (Durasi/60) × Cuaca</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= JEJAK KARBON ================= -->
+    <div id="page-karbon" class="page">
+        <div class="card">
+            <h2>🌍 Jejak Karbon</h2>
+            <div class="form-group">
+                <label>Pilih Kota/Kabupaten</label>
+                <select id="pilihKota"></select>
+            </div>
+            <button class="btn-utama" onclick="ambilDataIQAir()">Tarik Data Udara</button>
+            <div class="result-box" id="hasilApi" style="background: #e3f2fd; border-left: 4px solid #2196f3;">Klik tombol untuk mengambil data.</div>
+            <div class="result-box" style="margin-top: 15px;">
+                <p>Estimasi Jejak Karbon: <span class="highlight" id="hasilKarbon">0 kg CO2e</span></p>
+                <p id="statusSaran" style="font-weight: bold; margin-top: 10px;"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ================= NAVIGASI ================= */
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function bukaHalaman(namaHalaman) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById('page-' + namaHalaman).classList.add('active');
+            document.querySelectorAll('.sidebar-menu li').forEach(li => li.classList.remove('active'));
+            if(document.getElementById('menu-' + namaHalaman)) document.getElementById('menu-' + namaHalaman).classList.add('active');
+            if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
+        }
+
+        function formatRupiahInput(input) {
+            let angka = input.value.replace(/[^,\d]/g, '').toString();
+            let split = angka.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+            input.value = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+        }
+
+        /* ================= KEUANGAN & HUTANG ================= */
+        let totalMasuk = 0, totalKeluar = 0;
+        let daftarHutang = [];
+
+        function toggleFormHutang() {
+            const jenis = document.getElementById('jenisTransaksi').value;
+            document.getElementById('formHutang').style.display = (jenis === 'hutang') ? 'block' : 'none';
+        }
+
+        function tambahTransaksi() {
+            const jenis = document.getElementById('jenisTransaksi').value;
+            const ket = document.getElementById('ketTransaksi').value || 'Tanpa Keterangan';
+            let nominalStr = document.getElementById('nominalTransaksi').value.replace(/\./g, '');
+            const nominal = parseFloat(nominalStr) || 0;
+            
+            if(nominal <= 0) { alert('Masukkan nominal yang valid!'); return; }
+
+            const waktu = new Date().toLocaleString('id-ID');
+            const tbody = document.getElementById('tabelJurnal');
+            const row = document.createElement('tr');
+            const formatRp = (angka) => 'Rp ' + angka.toLocaleString('id-ID');
+
+            if(jenis === 'pemasukan') {
+                totalMasuk += nominal;
+                row.innerHTML = `<td>${waktu}</td><td>${ket}</td><td style="color:green;">+ ${formatRp(nominal)}</td>`;
+            } else if(jenis === 'pengeluaran') {
+                totalKeluar += nominal;
+                row.innerHTML = `<td>${waktu}</td><td>${ket}</td><td style="color:red;">- ${formatRp(nominal)}</td>`;
+            } else if(jenis === 'hutang') {
+                const bunga = parseFloat(document.getElementById('bungaHutang').value) || 0;
+                const jatuhTempo = document.getElementById('jatuhTempo').value || 'Tidak ada';
+                daftarHutang.push({ ket, nominal, bunga, jatuhTempo });
+                row.innerHTML = `<td>${waktu}</td><td>HUTANG: ${ket}</td><td style="color:orange;">${formatRp(nominal)}</td>`;
+                tampilkanStatusHutang();
+            }
+
+            tbody.appendChild(row);
+            updateSaldo();
+            document.getElementById('ketTransaksi').value = '';
+            document.getElementById('nominalTransaksi').value = '';
+        }
+
+        function updateSaldo() {
+            document.getElementById('totalMasuk').innerText = 'Rp ' + totalMasuk.toLocaleString('id-ID');
+            document.getElementById('totalKeluar').innerText = 'Rp ' + totalKeluar.toLocaleString('id-ID');
+            document.getElementById('saldoAkhir').innerText = 'Rp ' + (totalMasuk - totalKeluar).toLocaleString('id-ID');
+        }
+
+        function tampilkanStatusHutang() {
+            const div = document.getElementById('statusHutang');
+            if(daftarHutang.length === 0) { div.innerHTML = ''; return; }
+            let html = '<div class="result-box" style="background:#fff3e0; border-left:4px solid #ff9800;"><b>Status Hutang:</b><br>';
+            daftarHutang.forEach((h, i) => {
+                const totalBunga = (h.nominal * h.bunga) / 100;
+                const totalBayar = h.nominal + totalBunga;
+                html += `<p>${i+1}. ${h.ket} - Pokok: Rp ${h.nominal.toLocaleString('id-ID')} | Bunga: ${h.bunga}% | <b>Total Bayar: Rp ${totalBayar.toLocaleString('id-ID')}</b> | Tempo: ${h.jatuhTempo}</p>`;
+            });
+            div.innerHTML = html + '</div>';
+        }
+
+        function catatTagihanKeKeuangan(namaTagihan, idElemenNominal) {
+            const nominal = parseFloat(document.getElementById(idElemenNominal).getAttribute('data-nominal'));
+            if(isNaN(nominal) || nominal <= 0) { alert('Hitung tagihan terlebih dahulu!'); return; }
+            bukaHalaman('keuangan');
+            document.getElementById('jenisTransaksi').value = 'pengeluaran';
+            document.getElementById('ketTransaksi').value = `Bayar Tagihan ${namaTagihan}`;
+            document.getElementById('nominalTransaksi').value = nominal;
+            tambahTransaksi();
+            alert(`Berhasil mencatat pengeluaran ${namaTagihan} sebesar Rp ${nominal.toLocaleString('id-ID')}!`);
+        }
+
+        /* ================= ENERGI & AIR ================= */
+        function bukaTabEnergi(tab) {
+            document.getElementById('konten-listrik').style.display = 'none';
+            document.getElementById('konten-surya').style.display = 'none';
+            document.getElementById('konten-air').style.display = 'none';
+            document.getElementById('tab-btn-listrik').classList.remove('active');
+            document.getElementById('tab-btn-surya').classList.remove('active');
+            document.getElementById('tab-btn-air').classList.remove('active');
+
+            if(tab === 'listrik') {
+                document.getElementById('konten-listrik').style.display = 'block';
+                document.getElementById('tab-btn-listrik').classList.add('active');
+            } else if (tab === 'surya') {
+                document.getElementById('konten-surya').style.display = 'block';
+                document.getElementById('tab-btn-surya').classList.add('active');
+            } else {
+                document.getElementById('konten-air').style.display = 'block';
+                document.getElementById('tab-btn-air').classList.add('active');
+            }
+        }
+
+        let daftarPerangkat = [];
+        function tambahPerangkatListrik() {
+            const select = document.getElementById('perangkatListrik');
+            const nama = select.options[select.selectedIndex].text;
+            const daya = parseFloat(select.value);
+            const jam = parseFloat(document.getElementById('jamPerangkat').value);
+            if(isNaN(jam) || jam <= 0) { alert('Masukkan jam pemakaian yang valid!'); return; }
+            daftarPerangkat.push({ nama, daya, jam });
+            renderTabelPerangkat();
+        }
+
+        function hapusPerangkat(index) {
+            daftarPerangkat.splice(index, 1);
+            renderTabelPerangkat();
+        }
+
+        function renderTabelPerangkat() {
+            const tbody = document.querySelector('#tabelPerangkat tbody');
+            tbody.innerHTML = '';
+            let totalWatt = 0;
+            daftarPerangkat.forEach((p, i) => {
+                totalWatt += (p.daya * p.jam);
+                tbody.innerHTML += `<tr><td>${p.nama}</td><td>${p.daya} W</td><td>${p.jam} jam</td><td><button class="btn-hapus" onclick="hapusPerangkat(${i})">Hapus</button></td></tr>`;
+            });
+            document.getElementById('totalDayaHarian').innerText = totalWatt.toLocaleString('id-ID') + ' Wh';
+            document.getElementById('hasilListrikBox').style.display = 'none';
+        }
+
+        function hitungTagihanListrik() {
+            if(daftarPerangkat.length === 0) { alert('Masukkan minimal 1 perangkat ke daftar!'); return; }
+            const tarif = parseFloat(document.getElementById('golonganListrik').value);
+            const d = parseFloat(document.getElementById('hariListrik').value) || 30;
+            let totalWhHarian = 0;
+            daftarPerangkat.forEach(p => totalWhHarian += (p.daya * p.jam));
+            const E = (totalWhHarian * d) / 1000;
+            const biayaBulanan = E * tarif;
+            const formatRp = (angka) => 'Rp ' + Math.round(angka).toLocaleString('id-ID');
+            document.getElementById('totalKwhBulanan').innerText = E.toFixed(2) + ' kWh';
+            document.getElementById('biayaListrikBulanan').innerText = formatRp(biayaBulanan);
+            document.getElementById('biayaListrikBulanan').setAttribute('data-nominal', biayaBulanan);
+            document.getElementById('hasilListrikBox').style.display = 'block';
+        }
+
+        function hitungSimulasiSurya() {
+            const kebutuhanKwh = parseFloat(document.getElementById('kebutuhanKwhSurya').value);
+            if(isNaN(kebutuhanKwh) || kebutuhanKwh <= 0) { alert('Masukkan kebutuhan listrik bulanan (kWh) yang valid!'); return; }
+            const kebutuhanHarian = kebutuhanKwh / 30;
+            const kapasitasKwp = kebutuhanHarian / (4.5 * 0.8); 
+            const jumlahPanel = Math.ceil(kapasitasKwp / 0.45);
+            const biayaInvestasi = kapasitasKwp * 15000000;
+            const hematBulanan = kebutuhanKwh * 1444.70;
+            const formatRp = (angka) => 'Rp ' + Math.round(angka).toLocaleString('id-ID');
+            document.getElementById('kapasitasSurya').innerText = kapasitasKwp.toFixed(2) + ' kWp';
+            document.getElementById('jumlahPanel').innerText = jumlahPanel + ' Unit Panel Surya (450Wp)';
+            document.getElementById('biayaInvestasiSurya').innerText = formatRp(biayaInvestasi);
+            document.getElementById('hematSurya').innerText = formatRp(hematBulanan);
+            document.getElementById('hasilSuryaBox').style.display = 'block';
+        }
+
+        function hitungTagihanAir() {
+            const tarif = parseFloat(document.getElementById('golonganAir').value);
+            const volume = parseFloat(document.getElementById('volumeAir').value);
+            const admin = parseFloat(document.getElementById('biayaAdminAir').value) || 0;
+            if(isNaN(volume) || volume <= 0) { alert('Masukkan volume air yang valid!'); return; }
+            const totalTagihan = (tarif * volume) + admin;
+            const formatRp = (angka) => 'Rp ' + Math.round(angka).toLocaleString('id-ID');
+            document.getElementById('biayaAirBulanan').innerText = formatRp(totalTagihan);
+            document.getElementById('biayaAirBulanan').setAttribute('data-nominal', totalTagihan);
+            document.getElementById('hasilAirBox').style.display = 'block';
+        }
+
+        /* ================= MAKANAN ================= */
+        let daftarMakanan = [];
+        let totalKaloriHarian = 0;
+        function simulasiScanMakanan() {
+            const hasilScan = document.getElementById('hasilScan');
+            hasilScan.innerText = "Sedang memindai gambar... (Simulasi AI)";
+            setTimeout(() => {
+                hasilScan.innerText = "✅ AI Mendeteksi: Nasi Putih + Rendang (Estimasi 450 kkal)";
+                document.getElementById('pilihMakanan').value = "175";
+                document.getElementById('porsiMakanan').value = "250";
+                alert("Makanan berhasil di-scan! Silakan klik tombol + untuk memasukkan ke keranjang.");
+            }, 1500);
+        }
+        function tambahMakanan() {
+            const select = document.getElementById('pilihMakanan');
+            const nama = select.options[select.selectedIndex].text;
+            const kaloriPer100g = parseFloat(select.value);
+            const porsi = parseFloat(document.getElementById('porsiMakanan').value);
+            if(isNaN(kaloriPer100g)) { alert('Pilih makanan terlebih dahulu!'); return; }
+            if(isNaN(porsi) || porsi <= 0) { alert('Masukkan porsi yang valid!'); return; }
+            const kaloriDidapat = (kaloriPer100g / 100) * porsi;
+            daftarMakanan.push({ nama, porsi, kaloriDidapat });
+            renderTabelMakanan();
+        }
+        function hapusMakanan(index) {
+            daftarMakanan.splice(index, 1);
+            renderTabelMakanan();
+        }
+        function renderTabelMakanan() {
+            const tbody = document.querySelector('#tabelMakanan tbody');
+            tbody.innerHTML = '';
+            totalKaloriHarian = 0;
+            daftarMakanan.forEach((m, i) => {
+                totalKaloriHarian += m.kaloriDidapat;
+                tbody.innerHTML += `<tr><td>${m.nama}</td><td>${m.porsi} g</td><td>${Math.round(m.kaloriDidapat)} kkal</td><td><button class="btn-hapus" onclick="hapusMakanan(${i})">Hapus</button></td></tr>`;
+            });
+            document.getElementById('totalKaloriHarian').innerText = Math.round(totalKaloriHarian) + ' kkal';
+        }
+
+        /* ================= AKTIVITAS FISIK ================= */
+        function mulaiRute() {
+            const met = parseFloat(document.getElementById('jenisOlahraga').value);
+            const berat = parseFloat(document.getElementById('beratBadan').value);
+            const durasiMenit = parseFloat(document.getElementById('durasiLatihan').value);
+            const faktorCuaca = parseFloat(document.getElementById('kondisiCuaca').value);
+
+            if(isNaN(berat) || berat <= 0) { alert('Masukkan berat badan yang valid!'); return; }
+            if(isNaN(durasiMenit) || durasiMenit <= 0) { alert('Masukkan durasi latihan (menit) yang valid!'); return; }
+            
+            document.getElementById('map-text').style.display = 'none';
+            document.getElementById('garisRute').style.display = 'block';
+            document.getElementById('pinMulai').style.display = 'block';
+            document.getElementById('pinSelesai').style.display = 'block';
+
+            const durasiJam = durasiMenit / 60;
+            const kaloriDasar = met * berat * durasiJam;
+            const totalBakar = kaloriDasar * faktorCuaca;
+            
+            document.getElementById('hasilKaloriBakar').innerText = Math.round(totalBakar) + ' kkal';
+        }
+
+        /* ================= KARBON ================= */
+        const daftarKota = [
+            "Jakarta", "Surabaya", "Bandung", "Medan", "Semarang", "Makassar", "Palembang", "Tangerang", "Depok", "Bekasi",
+            "Padang", "Denpasar", "Malang", "Samarinda", "Banjarmasin", "Pontianak", "Manado", "Yogyakarta", "Solo", "Cirebon",
+            "Balikpapan", "Pekanbaru", "Jambi", "Bengkulu", "Bandar Lampung", "Mataram", "Kupang", "Jayapura", "Ambon", "Ternate",
+            "Madiun", "Kediri", "Probolinggo", "Pasuruan", "Mojokerto", "Batu", "Blitar", "Tulungagung", "Jember", "Banyuwangi",
+            "Tasikmalaya", "Cimahi", "Sukabumi", "Garut", "Cianjur", "Purwakarta", "Subang", "Indramayu", "Majalengka", "Kuningan",
+            "Salatiga", "Magelang", "Purwokerto", "Tegal", "Pekalongan", "Kudus", "Jepara", "Pati", "Rembang", "Blora",
+            "Klaten", "Boyolali", "Sragen", "Karanganyar", "Wonogiri", "Ponorogo", "Pacitan", "Trenggalek", "Ngawi", "Magetan",
+            "Sidoarjo", "Gresik", "Lamongan", "Tuban", "Bojonegoro", "Nganjuk", "Jombang", "Bangkalan", "Sampang", "Pamekasan",
+            "Sumenep", "Lumajang", "Bondowoso", "Situbondo", "Banyuwangi", "Palangkaraya", "Sampit", "Tarakan", "Singkawang", "Bontang",
+            "Gorontalo", "Palu", "Kendari", "Baubau", "Bitung", "Tomohon", "Kotamobagu", "Sorong", "Merauke", "Timika"
+        ];
+
+        window.onload = function() {
+            const selectKota = document.getElementById('pilihKota');
+            daftarKota.forEach(kota => {
+                let option = document.createElement('option');
+                option.value = kota;
+                option.innerText = kota;
+                selectKota.appendChild(option);
+            });
+        }
+
+        function ambilDataIQAir() {
+            const kota = document.getElementById('pilihKota').value;
+            const hasilDiv = document.getElementById('hasilApi');
+            const statusSaran = document.getElementById('statusSaran');
+            hasilDiv.innerHTML = `Sedang mengambil data dari IQAir untuk ${kota}...`;
+            setTimeout(() => {
+                const aqi = Math.floor(Math.random() * (180 - 30 + 1)) + 30; 
+                let status = ""; let saranHTML = "";
+                const jejakKarbon = (aqi / 100).toFixed(2);
+                if (aqi <= 50) {
+                    status = "Baik";
+                    saranHTML = `✅ <span class="safe-text">STATUS: BAGUS</span><br><b>Saran:</b> Udara sangat bersih. Sangat aman untuk beraktivitas di luar ruangan tanpa masker.`;
+                } else if (aqi <= 100) {
+                    status = "Sedang";
+                    saranHTML = `✅ <span class="safe-text">STATUS: SEDANG</span><br><b>Saran:</b> Udara masih cukup baik. Kamu bisa beraktivitas di luar, namun bagi yang sensitif sebaiknya tetap waspada.`;
+                } else if (aqi <= 150) {
+                    status = "Tidak Sehat bagi Sensitif";
+                    saranHTML = `⚠️ <span class="warning-text">STATUS: KURANG BAGUS</span><br><b>Saran:</b> Kelompok sensitif (anak, lansia, penderita asma) sebaiknya mengurangi aktivitas luar ruangan. Gunakan masker medis jika keluar.`;
+                } else {
+                    status = "Tidak Sehat";
+                    saranHTML = `🚨 <span class="warning-text">STATUS: TIDAK BAGUS</span><br><b>Saran:</b> Tetap di dalam rumah, tutup jendela, dan gunakan masker (N95) jika terpaksa keluar. Hindari aktivitas luar ruangan yang berat.`;
+                }
+                hasilDiv.innerHTML = `<b>📍 ${kota}</b><br>AQI: <b>${aqi}</b> (${status})<br>Sumber: IQAir (Simulasi Data)`;
+                document.getElementById('hasilKarbon').innerText = jejakKarbon + ' kg CO2e';
+                statusSaran.innerHTML = saranHTML;
+            }, 1000); 
+        }
+    </script>
+</body>
+</html>
